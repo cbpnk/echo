@@ -1,0 +1,7 @@
+#+TITLE: Echo
+
+Echo, named after the bat with unicorn in My Little Pony, is a remix
+of org-roam and org-ql. Echo takes advantage of the built-in sqlite
+comes with Emacs 29, node properties are stored as JSON strings in the
+database, and use inotify on Linux to update cache as soon as file has
+changed.
