@@ -54,6 +54,14 @@ Performs a database upgrade when required."
       (setq echo-db--connection conn)))
   echo-db--connection)
 
+;;;###autoload
+(defmacro with-echo-db-transaction (conn &rest body)
+  "Execute BODY in transaction for echo-db"
+  (declare (indent 1) (debug (form body)))
+  `(let ((,conn (echo-db)))
+     (with-sqlite-transaction ,conn
+       ,@body)))
+
 (defun echo-db--init (conn)
   (sqlite-pragma conn "foreign_keys = true")
 
@@ -320,29 +328,25 @@ LIMIT 1
 
 ;;;###autoload
 (defun echo-db-add-file (abs-path)
-  (let ((conn (echo-db)))
-    (with-sqlite-transaction conn
-      (if (directory-name-p abs-path)
-          (echo-db--add-directory conn abs-path)
-        (echo-db--update-file conn abs-path)))))
-
-;;;###autoload
-(defun echo-db-update-file (abs-path)
-  (let ((conn (echo-db)))
-    (with-sqlite-transaction conn
+  (with-echo-db-transaction conn
+    (if (directory-name-p abs-path)
+        (echo-db--add-directory conn abs-path)
       (echo-db--update-file conn abs-path))))
 
 ;;;###autoload
+(defun echo-db-update-file (abs-path)
+  (with-echo-db-transaction conn
+    (echo-db--update-file conn abs-path)))
+
+;;;###autoload
 (defun echo-db-delete-file (abs-path)
-  (let ((conn (echo-db)))
-    (with-sqlite-transaction conn
-      (echo-db--delete-file conn abs-path))))
+  (with-echo-db-transaction conn
+    (echo-db--delete-file conn abs-path)))
 
 ;;;###autoload
 (defun echo-db-rename-file (old-abs-path new-abs-path)
-  (let ((conn (echo-db)))
-    (with-sqlite-transaction conn
-      (echo-db--rename-file conn old-abs-path new-abs-path))))
+  (with-echo-db-transaction conn
+    (echo-db--rename-file conn old-abs-path new-abs-path)))
 
 ;;;###autoload
 (defun echo-db-refresh (&optional file-list)
@@ -362,9 +366,8 @@ LIMIT 1
             (lambda (buffer)
               (and (buffer-modified-p buffer)
                    (local-variable-p 'echo-db--buffer-visited buffer)))
-            buffer-list)))
-         (conn (echo-db)))
-    (with-sqlite-transaction conn
+            buffer-list))))
+    (with-echo-db-transaction conn
       (let ((default-directory echo-directory))
         (if file-list
             (when-let ((killed-list (seq-difference abs-path-list buffer-file-list)))
@@ -402,15 +405,14 @@ Do nothing if file watch mode enabled"
     (echo-db-add-file (file-name-as-directory echo-directory))))
 
 (defun echo-db--on-file-change (event abs-path &optional abs-path1)
-  (let ((conn (echo-db)))
-    (with-sqlite-transaction conn
-      (pcase-exhaustive event
-        ('modified
-         (echo-db--update-file conn abs-path))
-        ('deleted
-         (echo-db--delete-file conn abs-path))
-        ('renamed
-         (echo-db--rename-file conn abs-path abs-path1))))))
+  (with-echo-db-transaction conn
+    (pcase-exhaustive event
+      ('modified
+       (echo-db--update-file conn abs-path))
+      ('deleted
+       (echo-db--delete-file conn abs-path))
+      ('renamed
+       (echo-db--rename-file conn abs-path abs-path1)))))
 
 (defun echo-db--on-watch-toggled ()
   (when echo-filewatch-mode
@@ -423,12 +425,11 @@ Do nothing if file watch mode enabled"
             (lambda (x)
               (file-relative-name (cdr x) echo-directory))
             echo-filewatch--desc-alist))))
-      (let ((conn (echo-db)))
-        (with-sqlite-transaction conn
-          (sqlite-execute
-           conn
-           "DELETE FROM file WHERE path NOT IN (SELECT value FROM json_each(?))"
-           (list (json-encode files))))))))
+      (with-echo-db-transaction conn
+        (sqlite-execute
+         conn
+         "DELETE FROM file WHERE path NOT IN (SELECT value FROM json_each(?))"
+         (list (json-encode files)))))))
 
 (add-hook 'echo-filewatch-hook 'echo-db--on-file-change)
 

@@ -34,9 +34,8 @@
 ;;;###autoload
 (defun org-babel-execute:echo-db (body _params)
   "Execute a block of Sqlite code in echo-db"
-  (let ((conn (echo-db)))
-    (with-sqlite-transaction conn
-      (sqlite-select conn body nil 'full))))
+  (with-echo-db-transaction conn
+    (sqlite-select conn body nil 'full)))
 
 ;;;###autoload
 (defun org-babel-prep-session:echo-db (_session _params)
