@@ -89,7 +89,8 @@ If BUFFER is not specified, use the current buffer."
   (let ((buffer (or buffer (current-buffer))))
     (with-current-buffer buffer
       (and (derived-mode-p 'org-mode)
-           (echo-file-p (buffer-file-name (buffer-base-buffer)))))))
+           (not (buffer-base-buffer))
+           (echo-file-p (buffer-file-name))))))
 
 ;;;###autoload
 (defun echo-buffer-list ()
