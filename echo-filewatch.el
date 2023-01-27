@@ -25,7 +25,7 @@
 
 ;;; Code:
 
-(require 'org)
+(require 'echo)
 
 (defvar echo-filewatch-hook nil)
 

@@ -41,6 +41,7 @@ a property drawer)."
 
 (defvar echo-db--connection nil)
 
+;;;###autoload
 (defun echo-db ()
   "Entrypoint to the Echo sqlite database.
 Initializes and stores the database, and the database connection.

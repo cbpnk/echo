@@ -26,21 +26,24 @@
 
 ;;; Code:
 
-(require 'ob)
 (require 'sql)
 
-(add-to-list 'org-src-lang-modes '("echo-db" . sql))
+(with-eval-after-load 'org-src
+  (add-to-list 'org-src-lang-modes '("echo-db" . sql)))
 
+;;;###autoload
 (defun org-babel-execute:echo-db (body _params)
   "Execute a block of Sqlite code in echo-db"
   (let ((conn (echo-db)))
     (with-sqlite-transaction conn
       (sqlite-select conn body nil 'full))))
 
+;;;###autoload
 (defun org-babel-prep-session:echo-db (_session _params)
   "Raise an error because support for echo-db sessions isn't implemented."
   (error "SQLite sessions not yet implemented"))
 
+;;;###autoload
 (defun org-babel-edit-prep:echo-db (_info)
   (sql-set-product 'sqlite))
 

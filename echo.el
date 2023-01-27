@@ -33,7 +33,6 @@
 (require 'org)
 (require 'org-attach)
 
-;;;###autoload
 (defcustom echo-directory (expand-file-name org-directory)
   "Default path to Echo files.
 Should be absolute path
@@ -41,7 +40,6 @@ All Org files, at any level of nesting, are considered."
   :type 'directory
   :group 'echo)
 
-;;;###autoload
 (defcustom echo-file-exclude-regexp (regexp-quote org-attach-id-dir)
   "Directory matching this regular expression are excluded from Echo."
   :type '(choice
@@ -49,7 +47,6 @@ All Org files, at any level of nesting, are considered."
           (const :tag "Include everything" nil))
   :group 'echo)
 
-;;;###autoload
 (defcustom echo-collect-keywords '("TITLE")
   "collect file properties"
   :group 'echo

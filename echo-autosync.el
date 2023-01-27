@@ -23,6 +23,7 @@
 
 ;;; Code:
 
+(require 'echo)
 
 ;;;###autoload
 (define-minor-mode echo-autosync-mode
