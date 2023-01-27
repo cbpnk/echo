@@ -28,8 +28,7 @@
 
 (require 'sql)
 
-(with-eval-after-load 'org-src
-  (add-to-list 'org-src-lang-modes '("echo-db" . sql)))
+;;;###autoload (with-eval-after-load 'org-src (add-to-list 'org-src-lang-modes '("echo-db" . sql)))
 
 ;;;###autoload
 (defun org-babel-execute:echo-db (body _params)
