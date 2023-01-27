@@ -348,34 +348,47 @@ LIMIT 1
   (let* ((abs-path-list
           (seq-filter
            'echo-file-p
-           (seq-uniq (seq-map 'expand-file-name file-list))))
+           (seq-uniq (mapcar 'expand-file-name file-list))))
          (buffer-list
           (if file-list
-              (seq-filter 'identity (seq-map 'find-buffer-visiting abs-path-list))
+              (seq-filter 'identity (mapcar 'find-buffer-visiting abs-path-list))
             (echo-buffer-list)))
          (buffer-file-list
-          (seq-map 'buffer-file-name buffer-list))
+          (mapcar
+           'buffer-file-name
+           (seq-filter
+            (lambda (buffer)
+              (and (buffer-modified-p buffer)
+                   (local-variable-p 'echo-db--buffer-visited buffer)))
+            buffer-list)))
          (conn (echo-db)))
     (with-sqlite-transaction conn
-      (if file-list
-          (when-let ((killed-list (seq-difference abs-path-list buffer-file-list)))
+      (let ((default-directory echo-directory))
+        (if file-list
+            (when-let ((killed-list (seq-difference abs-path-list buffer-file-list)))
+              (sqlite-execute
+               conn
+               "DELETE FROM temp.file WHERE path IN (SELECT value FROM json_each(?))"
+               (list
+                (json-encode
+                 (mapcar 'file-relative-name killed-list)))))
+          (if buffer-file-list
+              (sqlite-execute
+               conn
+               "DELETE FROM temp.file WHERE path NOT IN (SELECT value FROM json_each(?))"
+               (list
+                (json-encode
+                 (mapcar 'file-relative-name buffer-file-list))))
             (sqlite-execute
              conn
-             "DELETE FROM temp.file WHERE path IN (SELECT value FROM json_each(?))"
-             (list (json-encode killed-list))))
-        (if buffer-file-list
-            (sqlite-execute
-             conn
-             "DELETE FROM temp.file WHERE path NOT IN (SELECT value FROM json_each(?))"
-             (list (json-encode buffer-file-list)))
-          (sqlite-execute
-           conn
-           "DELETE FROM temp.file")))
+             "DELETE FROM temp.file"))))
       (dolist (buffer buffer-list)
-        (with-current-buffer buffer
-          (org-with-wide-buffer
-           (when-let ((file-id (echo-db--insert-buffer conn)))
-             (echo-db--update-nodes-and-links conn "temp" file-id))))))))
+        (when (buffer-modified-p buffer)
+          (with-current-buffer buffer
+            (make-local-variable 'echo-db--buffer-visited)
+            (org-with-wide-buffer
+             (when-let ((file-id (echo-db--insert-buffer conn)))
+               (echo-db--update-nodes-and-links conn "temp" file-id)))))))))
 
 ;;;###autoload
 (defun echo-db-sync ()

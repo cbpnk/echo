@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2020-2022 Jethro Kuan <jethrokuan95@gmail.com>
 
-;; Author: Jethro Kuan <jethrokuan95@gmail.com>, Michael Albinus <michael.albinus@gmx.de>
+;; Author: Jethro Kuan <jethrokuan95@gmail.com>, Michael Albinus <michael.albinus@gmx.de>, Eric Schulte
 ;; URL: https://github.com/cbpnk/echo
 ;; Keywords: Org
 ;; Package-Requires: ((emacs "28.1") (org "9.0") (magit-section "3.0.0"))
