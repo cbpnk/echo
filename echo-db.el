@@ -24,6 +24,8 @@
 
 ;;; Code:
 
+(require 'org)
+
 (defcustom echo-db-location nil
   "The path to file where the Echo database is stored."
   :type 'string
@@ -351,7 +353,7 @@ LIMIT 1
            (seq-uniq (mapcar 'expand-file-name file-list))))
          (buffer-list
           (if file-list
-              (seq-filter 'identity (mapcar 'find-buffer-visiting abs-path-list))
+              (seq-uniq (seq-filter 'identity (mapcar 'org-find-base-buffer-visiting abs-path-list)))
             (echo-buffer-list)))
          (buffer-file-list
           (mapcar
